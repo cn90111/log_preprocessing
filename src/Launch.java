@@ -1,0 +1,21 @@
+import java.util.ArrayList;
+
+import processor.MoLFI;
+import processor.PreprocessMethod;
+
+public class Launch
+{
+	public static void main(String[] arg) throws Exception
+	{
+		ArrayList<String> template;
+		PreprocessMethod preprocess = new MoLFI();
+		preprocess.transformFile("./Spark_dataset.txt");
+		template = preprocess.getTemplate();
+
+		for (String line : template)
+		{
+			System.out.println(line);
+		}
+		System.exit(0);
+	}
+}
