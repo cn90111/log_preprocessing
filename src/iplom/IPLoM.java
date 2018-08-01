@@ -1,7 +1,9 @@
-package processor;
+package iplom;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import processor.PreprocessMethod;
 
 // IPLoM ─ https://ieeexplore.ieee.org/document/5936060/ 主
 // IPLoM ─ https://dl.acm.org/citation.cfm?id=1557154 輔 (get rank position function)

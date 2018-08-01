@@ -8,11 +8,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+import molfi.Template;
+
 public abstract class PreprocessMethod
 {
 	private String fileContent;
 	private String[] lineArray;
 	private ArrayList<String> template;
+
+	private String outputFilePath = "./preprocess_file.txt";
 
 	public void transformFile(String filePath) throws Exception
 	{
@@ -44,62 +48,12 @@ public abstract class PreprocessMethod
 
 	private void writeFile(String content) throws IOException
 	{
-		Files.write(Paths.get("./preprocess_file.txt"), fileContent.getBytes());
-	}
-
-	protected String[] splitLog(String log)
-	{
-		String anySymbol = "[\\W]+";
-		return log.split(anySymbol);
+		Files.write(Paths.get(outputFilePath), fileContent.getBytes());
 	}
 
 	public ArrayList<String> getTemplate()
 	{
 		return template;
-	}
-
-	protected boolean compareTemplate(String template, String log)
-	{
-		String[] templateTokens = template.split(" ");
-		String[] logTokens = splitLog(log);
-
-		int offset = 0;
-		
-		for (int i = 0; i < templateTokens.length; i++)
-		{
-			try
-			{
-				if (logTokens[i + offset].equals(""))
-				{
-					offset++;
-				}	
-			}
-			catch(Exception e)
-			{
-				System.out.println("123");
-			}
-			if (templateTokens[i].equals("*") || templateTokens[i].equals("#spec#"))
-			{
-				continue;
-			}
-			if (!templateTokens[i].equals(logTokens[i + offset]))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-	protected boolean compareTemplate(ArrayList<String> template, String log)
-	{
-		for (String temp : template)
-		{
-			if (compareTemplate(temp, log))
-			{
-				return true;
-			}
-		}
-		return false;
 	}
 
 	protected boolean isNumber(String token)
@@ -111,11 +65,40 @@ public abstract class PreprocessMethod
 	{
 		for (String token : tokens)
 		{
-			if (token.equals("*"))
+			if (token.equals("*") || token.equals("#spec#"))
 			{
 				return false;
 			}
 		}
 		return true;
+	}
+
+	public static String[] splitLog(String log)
+	{
+		String anySymbol = "[\\W]+";
+		return log.split(anySymbol);
+	}
+
+	public static String combineTokens(String[] tokens)
+	{
+		StringBuilder combineString = new StringBuilder(128);
+		for (String token : tokens)
+		{
+			combineString.append(token);
+			combineString.append(" ");
+		}
+		return combineString.toString();
+	}
+
+	public static boolean compareTemplate(ArrayList<Template> template, String log)
+	{
+		for (Template temp : template)
+		{
+			if (temp.compareTemplate(log))
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 }
