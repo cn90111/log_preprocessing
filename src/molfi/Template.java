@@ -1,6 +1,7 @@
 package molfi;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 
@@ -12,11 +13,28 @@ public class Template extends AbstractTemplate
 	private int[] constantIndex;
 	private int[] variableIndex;
 	private ArrayList<String> matchLog;
+	private HashMap<Integer, ArrayList<String>> logContent;
+	private int logContentSize;
+	private float freq;
+	private float spec;
 
-	public Template(String content)
+	public Template(String content, HashMap<Integer, ArrayList<String>> logContent, int logContentSize)
 	{
 		super(content);
 		matchLog = new ArrayList<String>();
+		this.logContentSize = logContentSize;
+		this.logContent = logContent;
+		update();
+	}
+
+	public float getFreq()
+	{
+		return freq;
+	}
+
+	public float getSpec()
+	{
+		return spec;
 	}
 
 	public int[] getConstantIndex()
@@ -29,11 +47,19 @@ public class Template extends AbstractTemplate
 		return variableIndex;
 	}
 
+	public int getMatchLogSize()
+	{
+		return matchLog.size();
+	}
+
 	protected void update()
 	{
 		tokens = content.split(" ");
 		detectConstantIndex();
 		detectVariableIndex();
+		getMatchMessage();
+		freqValue();
+		specValue();
 	}
 
 	public void fixAllStarTemplate()
@@ -148,16 +174,6 @@ public class Template extends AbstractTemplate
 		update();
 	}
 
-	public void clearMatchLog()
-	{
-		matchLog.clear();
-	}
-
-	public void addMatchLog(String log)
-	{
-		matchLog.add(log);
-	}
-
 	private int[] convertIntegers(List<Integer> intList)
 	{
 		int[] intArray = new int[intList.size()];
@@ -167,5 +183,30 @@ public class Template extends AbstractTemplate
 			intArray[i] = iterator.next().intValue();
 		}
 		return intArray;
+	}
+
+	private void freqValue()
+	{
+		freq = (float) matchLog.size() / logContentSize;
+	}
+
+	private void specValue()
+	{
+		spec = (float) constantIndex.length / tokens.length;
+	}
+
+	private void getMatchMessage()
+	{
+		int templateLength;
+		templateLength = tokens.length;
+		matchLog.clear();
+
+		for (String log : logContent.get(templateLength))
+		{
+			if (compareTemplate(log))
+			{
+				matchLog.add(log);
+			}
+		}
 	}
 }

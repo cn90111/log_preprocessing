@@ -12,7 +12,6 @@ public class Log
 	{
 		this.content = content;
 		update();
-
 	}
 
 	private void update()

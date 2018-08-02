@@ -10,6 +10,9 @@ public class MoLFI extends PreprocessMethod
 	HashMap<Integer, ArrayList<String>> logContent;
 	Solution solution;
 	ArrayList<String> templateList;
+	int contentSize;
+
+	float initStarRate = 0.3f;
 
 	int iter = 200;
 	int population = 20;
@@ -19,8 +22,9 @@ public class MoLFI extends PreprocessMethod
 	protected ArrayList<String> getTemplate(String[] content)
 	{
 		logContent = preprocessing(content);
+		contentSize = getContentSize(logContent);
 
-		solution = nsga2(logContent);
+		solution = nsga2(logContent, contentSize);
 		templateList = toArrayList(solution);
 
 		System.out.println("frequency:" + solution.getFreq());
@@ -55,7 +59,7 @@ public class MoLFI extends PreprocessMethod
 		return template.toString();
 	}
 
-	private Solution nsga2(HashMap<Integer, ArrayList<String>> content)
+	private Solution nsga2(HashMap<Integer, ArrayList<String>> content, int contentSize)
 	{
 		ArrayList<Solution> chromosome = initialize(content);
 		Solution solution;
@@ -63,7 +67,8 @@ public class MoLFI extends PreprocessMethod
 		{
 			chromosome = selection(chromosome, content);
 			chromosome = crossover(chromosome);
-			chromosome = mutation(chromosome, content);
+			chromosome = mutation(chromosome, content, contentSize);
+
 			System.out.print("iter:");
 			System.out.println(j);
 		}
@@ -72,6 +77,16 @@ public class MoLFI extends PreprocessMethod
 		solution = postProcessing(solution);
 		solution.update();
 		return solution;
+	}
+
+	private int getContentSize(HashMap<Integer, ArrayList<String>> logContent)
+	{
+		int contentSize = 0;
+		for (ArrayList<String> group : logContent.values())
+		{
+			contentSize = contentSize + group.size();
+		}
+		return contentSize;
 	}
 
 	private HashMap<Integer, ArrayList<String>> preprocessing(String[] content)
@@ -153,7 +168,7 @@ public class MoLFI extends PreprocessMethod
 
 		for (int i = 0; i < population; i++)
 		{
-			solution = new Solution(content);
+			solution = new Solution();
 
 			for (Integer logLength : content.keySet())
 			{
@@ -163,15 +178,19 @@ public class MoLFI extends PreprocessMethod
 				{
 					if (!compareTemplate(group, line))
 					{
-						Template template = new Template(line);
-						template.changeConstantOfTemplate();
-						getMatchMessage(template, content);
+						Template template = new Template(line, content, contentSize);
+
+						for (int j = 0; j < template.getConstantIndex().length * initStarRate; j++)
+						{
+							template.changeConstantOfTemplate();
+						}
+
 						group.add(template);
 					}
 				}
 				solution.put(logLength, group);
 			}
-			solution = removeOverlap(solution, content);
+			solution = removeOverlap(solution, content, contentSize);
 			solution.update();
 			chromosome.add(solution);
 		}
@@ -219,7 +238,8 @@ public class MoLFI extends PreprocessMethod
 		return chromosome;
 	}
 
-	private ArrayList<Solution> mutation(ArrayList<Solution> chromosome, HashMap<Integer, ArrayList<String>> content)
+	private ArrayList<Solution> mutation(ArrayList<Solution> chromosome, HashMap<Integer, ArrayList<String>> content,
+			int contentSize)
 	{
 		float groupMutationRate;
 		float templateMutationRate;
@@ -255,8 +275,7 @@ public class MoLFI extends PreprocessMethod
 							{
 								template.changeVariableOfTemplate();
 							}
-							getMatchMessage(template, content);
-							solution = removeOverlap(solution, content);
+							solution = removeOverlap(solution, content, contentSize);
 							solution.update();
 						}
 					}
@@ -372,20 +391,6 @@ public class MoLFI extends PreprocessMethod
 		return arrayListTemplate;
 	}
 
-	private void getMatchMessage(Template template, HashMap<Integer, ArrayList<String>> content)
-	{
-		int templateLength;
-		template.clearMatchLog();
-		templateLength = template.getTokens().length;
-		for (String log : content.get(templateLength))
-		{
-			if (template.compareTemplate(log))
-			{
-				template.addMatchLog(log);
-			}
-		}
-	}
-
 	private Solution getBestSolution(ArrayList<Solution> chromosome)
 	{
 		Solution solution;
@@ -441,7 +446,7 @@ public class MoLFI extends PreprocessMethod
 		return true;
 	}
 
-	private Solution removeOverlap(Solution solution, HashMap<Integer, ArrayList<String>> content)
+	private Solution removeOverlap(Solution solution, HashMap<Integer, ArrayList<String>> content, int contentSize)
 	{
 		ArrayList<Template> group;
 		ArrayList<Integer> overlapIndex = new ArrayList<Integer>();
@@ -469,14 +474,17 @@ public class MoLFI extends PreprocessMethod
 					}
 
 					// delete overlap
-					offset = 0;
-					saveIndex = (int) (Math.random() * overlapIndex.size());
-					for (int i = 0; i < overlapIndex.size(); i++)
+					if (overlapIndex.size() > 1)
 					{
-						if (i != saveIndex)
+						offset = 0;
+						saveIndex = selectSaveIndex(group, overlapIndex);
+						for (int i = 0; i < overlapIndex.size(); i++)
 						{
-							group.remove(overlapIndex.get(i) - offset);
-							offset++;
+							if (i != saveIndex)
+							{
+								group.remove(overlapIndex.get(i) - offset);
+								offset++;
+							}
 						}
 					}
 				}
@@ -486,14 +494,47 @@ public class MoLFI extends PreprocessMethod
 				{
 					if (!compareTemplate(group, line))
 					{
-						Template template = new Template(line);
+						Template template = new Template(line, content, contentSize);
 						template.changeConstantOfTemplate();
-						getMatchMessage(template, content);
 						group.add(template);
 					}
 				}
 			}
 		}
 		return solution;
+	}
+
+	private int selectSaveIndex(ArrayList<Template> group, ArrayList<Integer> overlapIndex)
+	{
+		Template template;
+		boolean isSameValue = true;
+
+		template = group.get(overlapIndex.get(0));
+		int saveIndex = 0;
+		float bestValue = template.getFreq() * template.getSpec();
+		float nowValue;
+
+		for (int i = 1; i < overlapIndex.size(); i++)
+		{
+			template = group.get(overlapIndex.get(i));
+			nowValue = template.getFreq() * template.getSpec();
+			if (nowValue > bestValue)
+			{
+				bestValue = nowValue;
+				saveIndex = i;
+				isSameValue = false;
+			}
+			else if (nowValue < bestValue)
+			{
+				isSameValue = false;
+			}
+		}
+
+		if (isSameValue == true)
+		{
+			saveIndex = (int) (Math.random() * overlapIndex.size());
+		}
+
+		return saveIndex;
 	}
 }
