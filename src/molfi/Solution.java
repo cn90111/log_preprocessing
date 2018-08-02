@@ -5,19 +5,15 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Set;
 
-import processor.PreprocessMethod;
-
 public class Solution
 {
 	private HashMap<Integer, ArrayList<Template>> solution;
-	private HashMap<Integer, ArrayList<String>> logContent;
 	private float freq;
 	private float spec;
 
-	public Solution(HashMap<Integer, ArrayList<String>> logContent)
+	public Solution()
 	{
 		solution = new HashMap<Integer, ArrayList<Template>>();
-		this.logContent = logContent;
 	}
 
 	public Solution(Solution other)
@@ -27,7 +23,6 @@ public class Solution
 		{
 			solution.put(logLength, new ArrayList<Template>(other.get(logLength)));
 		}
-		logContent = other.getLogContent();
 		freq = other.getFreq();
 		spec = other.getSpec();
 	}
@@ -73,11 +68,6 @@ public class Solution
 		return solution.containsKey(key);
 	}
 
-	public HashMap<Integer, ArrayList<String>> getLogContent()
-	{
-		return logContent;
-	}
-
 	public float getFreq()
 	{
 		return freq;
@@ -90,46 +80,39 @@ public class Solution
 
 	private void freqValue()
 	{
-		int m = 0; // logCount
 		int n = 0; // templateCount
 		float sum = 0; // freq
-		ArrayList<Template> template;
-		for (Integer contentLength : logContent.keySet())
+		ArrayList<Template> group;
+		for (Integer templateLength : solution.keySet())
 		{
-			template = solution.get(contentLength);
-			for (String line : logContent.get(contentLength))
+			group = solution.get(templateLength);
+
+			for (Template template : group)
 			{
-				if (PreprocessMethod.compareTemplate(template, line))
-				{
-					sum++;
-				}
-				m++;
+				sum = sum + template.getFreq();
 			}
-			n = n + solution.get(contentLength).size();
+
+			n = n + group.size();
 		}
 
-		freq = (float) sum / (n * m);
+		freq = sum / n;
 	}
 
 	private void specValue()
 	{
+		int n = 0; // templateCount
 		float sum = 0; // spec
-		int n = 0;
-		int fixed = 0;
-		for (ArrayList<Template> temp : solution.values())
-		{
-			n = n + temp.size();
-		}
+		ArrayList<Template> group;
 		for (Integer templateLength : solution.keySet())
 		{
-			for (Template template : solution.get(templateLength))
+			group = solution.get(templateLength);
+			for (Template template : group)
 			{
-				fixed = template.getConstantIndex().length;
-				sum = sum + (float) fixed / (n * templateLength);
+				sum = sum + template.getSpec();
 			}
+			n = n + group.size();
 		}
-
-		spec = sum;
+		spec = sum / n;
 	}
 
 	public boolean isDominate(Solution other)

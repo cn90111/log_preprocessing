@@ -8,7 +8,6 @@ public abstract class AbstractTemplate
 	protected AbstractTemplate(String content)
 	{
 		this.content = content;
-		update();
 	}
 
 	protected abstract void update();
