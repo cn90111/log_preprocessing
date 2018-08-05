@@ -34,29 +34,23 @@ public class MoLFI extends PreprocessMethod
 	}
 
 	@Override
-	protected String transform(String[] content)
+	protected String transform(String line)
 	{
-		StringBuilder template = new StringBuilder(2048);
 		ArrayList<Template> group;
 		int groupLength;
 
-		for (String line : content)
-		{
-			String[] tokens = splitLog(line);
-			groupLength = tokens.length;
-			group = solution.get(groupLength);
+		String[] tokens = splitLog(line);
+		groupLength = tokens.length;
+		group = solution.get(groupLength);
 
-			for (Template temp : group)
+		for (Template temp : group)
+		{
+			if (temp.compareTemplate(line))
 			{
-				if (temp.compareTemplate(line))
-				{
-					template.append(temp.getContent());
-					template.append("\n");
-				}
+				return temp.getContent();
 			}
 		}
-
-		return template.toString();
+		return line;
 	}
 
 	private Solution nsga2(HashMap<Integer, ArrayList<String>> content, int contentSize)
@@ -65,12 +59,12 @@ public class MoLFI extends PreprocessMethod
 		Solution solution;
 		for (int j = 0; j < iter; j++)
 		{
+			System.out.print("iter:");
+			System.out.println(j);
+
 			chromosome = selection(chromosome, content);
 			chromosome = crossover(chromosome);
 			chromosome = mutation(chromosome, content, contentSize);
-
-			System.out.print("iter:");
-			System.out.println(j);
 		}
 
 		solution = getBestSolution(chromosome);
