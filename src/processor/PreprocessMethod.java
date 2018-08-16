@@ -17,7 +17,7 @@ public abstract class PreprocessMethod
 	private String[] lineArray;
 	private ArrayList<String> template;
 
-	private String outputFilePath = "./net_preprocess_file.txt";
+	private String outputFilePath = "./preprocess_file.txt";
 
 	public void transformFile(String filePath) throws Exception
 	{
@@ -29,7 +29,8 @@ public abstract class PreprocessMethod
 
 	private String readFile(String filePath) throws FileNotFoundException
 	{
-		Scanner reader = new Scanner(new File(filePath));
+		File file = new File(filePath);
+		Scanner reader = new Scanner(file);
 		String fileContent = reader.useDelimiter("\\Z").next();
 		reader.close();
 		return fileContent;
@@ -54,12 +55,17 @@ public abstract class PreprocessMethod
 		FileWriter writer = new FileWriter(outputFilePath);
 
 		String line;
-		while (reader.ready())
+		while (buffer.ready())
 		{
 			line = buffer.readLine();
 			writer.write(transform(line));
+			if (buffer.ready())
+			{
+				writer.write("\n");
+			}
 			writer.flush();
 		}
+		writer.flush();
 		buffer.close();
 		reader.close();
 		writer.close();

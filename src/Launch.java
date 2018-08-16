@@ -9,7 +9,7 @@ public class Launch
 	{
 		ArrayList<String> template;
 		PreprocessMethod preprocess = new MoLFI();
-		preprocess.transformFile("./yarn-hduser-nodemanager-master-filter.txt");
+		preprocess.transformFile("./Spark_dataset.txt");
 		template = preprocess.getTemplate();
 
 		for (String line : template)
