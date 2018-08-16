@@ -1,10 +1,11 @@
 package processor;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -23,13 +24,13 @@ public abstract class PreprocessMethod
 		fileContent = readFile(filePath);
 		lineArray = splitByline(fileContent);
 		template = getTemplate(lineArray);
-		fileContent = transform(lineArray);
-		writeFile(fileContent);
+		writeFile(filePath);
 	}
 
 	private String readFile(String filePath) throws FileNotFoundException
 	{
-		Scanner reader = new Scanner(new File(filePath));
+		File file = new File(filePath);
+		Scanner reader = new Scanner(file);
 		String fileContent = reader.useDelimiter("\\Z").next();
 		reader.close();
 		return fileContent;
@@ -44,11 +45,30 @@ public abstract class PreprocessMethod
 
 	protected abstract ArrayList<String> getTemplate(String[] content);
 
-	protected abstract String transform(String[] content);
+	protected abstract String transform(String line);
 
-	private void writeFile(String content) throws IOException
+	private void writeFile(String filePath) throws IOException
 	{
-		Files.write(Paths.get(outputFilePath), fileContent.getBytes());
+		FileReader reader = new FileReader(filePath);
+		BufferedReader buffer = new BufferedReader(reader);
+
+		FileWriter writer = new FileWriter(outputFilePath);
+
+		String line;
+		while (buffer.ready())
+		{
+			line = buffer.readLine();
+			writer.write(transform(line));
+			if (buffer.ready())
+			{
+				writer.write("\n");
+			}
+			writer.flush();
+		}
+		writer.flush();
+		buffer.close();
+		reader.close();
+		writer.close();
 	}
 
 	public ArrayList<String> getTemplate()
