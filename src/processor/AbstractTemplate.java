@@ -34,11 +34,18 @@ public abstract class AbstractTemplate
 			{
 				offset++;
 			}
-			if (tokens[i].equals("*") || tokens[i].equals("#spec#"))
+			if (tokens[i].equals("*"))
 			{
 				continue;
 			}
-			if (!tokens[i].equals(logTokens[i + offset]))
+			if (tokens[i].equals("#spec#"))
+			{
+				if (!(logTokens[i + offset].equals("spec") || logTokens[i + offset].matches("^\\d+$")))
+				{
+					return false;
+				}
+			}
+			else if (!tokens[i].equals(logTokens[i + offset]))
 			{
 				return false;
 			}

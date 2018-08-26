@@ -57,16 +57,15 @@ public class MoLFI extends PreprocessMethod
 	{
 		ArrayList<Solution> chromosome = initialize(content);
 		Solution solution;
-		for (int j = 0; j < iter; j++)
+		for (int i = 0; i < iter; i++)
 		{
 			System.out.print("iter:");
-			System.out.println(j);
+			System.out.println(i);
 
 			chromosome = selection(chromosome, content);
 			chromosome = crossover(chromosome);
 			chromosome = mutation(chromosome, content, contentSize);
 		}
-
 		solution = getBestSolution(chromosome);
 		solution = postProcessing(solution);
 		solution.update();
@@ -150,7 +149,6 @@ public class MoLFI extends PreprocessMethod
 				}
 			}
 		}
-
 		return simpleMap;
 	}
 
@@ -269,7 +267,7 @@ public class MoLFI extends PreprocessMethod
 							{
 								template.changeVariableOfTemplate();
 							}
-							solution = removeOverlap(solution, content, contentSize);
+							group = removeOverlap(group, content, contentSize, templateLength);
 							solution.update();
 						}
 					}
@@ -409,32 +407,33 @@ public class MoLFI extends PreprocessMethod
 				bestObjectiveValue = objectiveValue;
 			}
 		}
-
 		return bestSolution;
 	}
-
-	private boolean matchRule(Solution template, HashMap<Integer, ArrayList<String>> contentGroup)
+	
+	private boolean matchRule(ArrayList<Template> group, HashMap<Integer, ArrayList<String>> contentGroup,
+			int checkLength)
 	{
 		int matchCount;
 
-		for (Integer contentLength : contentGroup.keySet())
+		for (String line : contentGroup.get(checkLength))
 		{
-			for (String line : contentGroup.get(contentLength))
-			{
-				matchCount = 0;
+			matchCount = 0;
 
-				for (Template temp : template.get(contentLength))
+			for (Template temp : group)
+			{
+				if (temp.compareTemplate(line))
 				{
-					if (temp.compareTemplate(line))
-					{
-						matchCount++;
-					}
+					matchCount++;
 				}
 
-				if (matchCount == 0 || matchCount > 1)
+				if (matchCount > 1)
 				{
 					return false;
 				}
+			}
+			if (matchCount == 0)
+			{
+				return false;
 			}
 		}
 		return true;
@@ -443,59 +442,67 @@ public class MoLFI extends PreprocessMethod
 	private Solution removeOverlap(Solution solution, HashMap<Integer, ArrayList<String>> content, int contentSize)
 	{
 		ArrayList<Template> group;
+
+		for (Integer templateLength : solution.keySet())
+		{
+			group = solution.get(templateLength);
+			group = removeOverlap(group, content, contentSize, templateLength);
+		}
+
+		return solution;
+	}
+
+	private ArrayList<Template> removeOverlap(ArrayList<Template> group, HashMap<Integer, ArrayList<String>> content,
+			int contentSize, int checkLength)
+	{
 		ArrayList<Integer> overlapIndex = new ArrayList<Integer>();
 
 		int saveIndex;
 		int offset;
 
-		while (!matchRule(solution, content))
+		while (!matchRule(group, content, checkLength))
 		{
-			for (Integer contentLength : content.keySet())
+			for (String line : content.get(checkLength))
 			{
-				group = solution.get(contentLength);
+				overlapIndex.clear();
 
-				for (String line : content.get(contentLength))
+				// find overlap
+				for (int i = 0; i < group.size(); i++)
 				{
-					overlapIndex.clear();
-
-					// find overlap
-					for (int i = 0; i < group.size(); i++)
+					if (group.get(i).compareTemplate(line))
 					{
-						if (group.get(i).compareTemplate(line))
-						{
-							overlapIndex.add(i);
-						}
-					}
-
-					// delete overlap
-					if (overlapIndex.size() > 1)
-					{
-						offset = 0;
-						saveIndex = selectSaveIndex(group, overlapIndex);
-						for (int i = 0; i < overlapIndex.size(); i++)
-						{
-							if (i != saveIndex)
-							{
-								group.remove(overlapIndex.get(i) - offset);
-								offset++;
-							}
-						}
+						overlapIndex.add(i);
 					}
 				}
 
-				// get new template
-				for (String line : content.get(contentLength))
+				// delete overlap
+				if (overlapIndex.size() > 1)
 				{
-					if (!compareTemplate(group, line))
+					offset = 0;
+					saveIndex = selectSaveIndex(group, overlapIndex);
+					for (int i = 0; i < overlapIndex.size(); i++)
 					{
-						Template template = new Template(line, content, contentSize);
-						template.changeConstantOfTemplate();
-						group.add(template);
+						if (i != saveIndex)
+						{
+							group.remove(overlapIndex.get(i) - offset);
+							offset++;
+						}
 					}
 				}
 			}
+
+			// get new template
+			for (String line : content.get(checkLength))
+			{
+				if (!compareTemplate(group, line))
+				{
+					Template template = new Template(line, content, contentSize);
+					template.changeConstantOfTemplate();
+					group.add(template);
+				}
+			}
 		}
-		return solution;
+		return group;
 	}
 
 	private int selectSaveIndex(ArrayList<Template> group, ArrayList<Integer> overlapIndex)

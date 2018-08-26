@@ -19,9 +19,15 @@ public class Solution
 	public Solution(Solution other)
 	{
 		solution = new HashMap<Integer, ArrayList<Template>>();
+		ArrayList<Template> temp;
 		for (Integer logLength : other.keySet())
 		{
-			solution.put(logLength, new ArrayList<Template>(other.get(logLength)));
+			temp = new ArrayList<Template>();
+			for (Template template : other.get(logLength))
+			{
+				temp.add(new Template(template));
+			}
+			solution.put(logLength, temp);
 		}
 		freq = other.getFreq();
 		spec = other.getSpec();
