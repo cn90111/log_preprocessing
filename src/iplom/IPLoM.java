@@ -37,65 +37,37 @@ public class IPLoM extends PreprocessMethod
 	}
 
 	@Override
-	protected String transform(String[] content)
+	protected String transform(String content)
 	{
-		StringBuilder template = new StringBuilder(2048);
-		int lengthKey;
-		boolean findTemplate;
-
 		HashMap<String, HashMap<String, String>> positionMap;
 		HashMap<String, String> bijectionMap;
 
-		for (String line : content)
-		{
-			findTemplate = false;
-			lengthKey = splitLog(line).length;
-			positionMap = templateTree.get(lengthKey);
-			for (String positionKey : positionMap.keySet())
-			{
-				if (line.contains(positionKey) || positionKey.equals("Outlier"))
-				{
-					bijectionMap = positionMap.get(positionKey);
-					for (String bijectionKey : bijectionMap.keySet())
-					{
-						if (line.contains(bijectionKey))
-						{
-							template.append(bijectionMap.get(bijectionKey));
-							template.append("\n");
-							findTemplate = true;
-							break;
-						}
-						else if (bijectionKey.equals("M-M") && compareTemplate(bijectionMap.get("M-M"), line))
-						{
-							template.append(bijectionMap.get("M-M"));
-							template.append("\n");
-							findTemplate = true;
-							break;
-						}
-						else if (bijectionKey.equals("Outlier") && compareTemplate(bijectionMap.get("Outlier"), line))
-						{
-							template.append(bijectionMap.get("Outlier"));
-							template.append("\n");
-							findTemplate = true;
-							break;
-						}
-					}
+		int lengthKey = splitLog(content).length;
+		positionMap = templateTree.get(lengthKey);
 
-					if (findTemplate == true)
+		for (String positionKey : positionMap.keySet())
+		{
+			if (content.contains(positionKey) || positionKey.equals("Outlier"))
+			{
+				bijectionMap = positionMap.get(positionKey);
+				for (String bijectionKey : bijectionMap.keySet())
+				{
+					if (content.contains(bijectionKey))
 					{
-						break;
+						return bijectionMap.get(bijectionKey);
+					}
+					else if (bijectionKey.equals("M-M") && compareTemplate(bijectionMap.get("M-M"), content))
+					{
+						return bijectionMap.get("M-M");
+					}
+					else if (bijectionKey.equals("Outlier") && compareTemplate(bijectionMap.get("Outlier"), content))
+					{
+						return bijectionMap.get("Outlier");
 					}
 				}
 			}
-
-			if (findTemplate == false)
-			{
-				template.append(line);
-				template.append("\n");
-				findTemplate = true;
-			}
 		}
-		return template.toString();
+		return content;
 	}
 
 	// count - log
