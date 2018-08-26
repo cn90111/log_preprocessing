@@ -11,7 +11,7 @@ public class Launch
 		PreprocessMethod preprocess = new MoLFI();
 		preprocess.transformFile("./yarn-hduser-nodemanager-master-filter-simple.txt");
 		template = preprocess.getTemplate();
-
+		
 		for (String line : template)
 		{
 			System.out.println(line);

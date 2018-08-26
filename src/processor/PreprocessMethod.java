@@ -75,9 +75,17 @@ public abstract class PreprocessMethod
 		return template;
 	}
 
-	protected boolean isNumber(String token)
+	public static boolean isNumber(String token)
 	{
-		return token.matches("^\\d+$");
+		String[] splitToken = token.split("[\\W]+");
+		for (String temp : splitToken)
+		{
+			if (!temp.matches("^\\d+$"))
+			{
+				return false;
+			}
+		}
+		return true;
 	}
 
 	protected boolean isUniqueToken(String[] tokens)
@@ -94,8 +102,8 @@ public abstract class PreprocessMethod
 
 	public static String[] splitLog(String log)
 	{
-		String anySymbol = "[\\W]+";
-		return log.split(anySymbol);
+		String splitToken = "[ 	]+";
+		return log.split(splitToken);
 	}
 
 	public static String combineTokens(String[] tokens)

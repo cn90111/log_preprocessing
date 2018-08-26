@@ -40,7 +40,7 @@ public abstract class AbstractTemplate
 			}
 			if (tokens[i].equals("#spec#"))
 			{
-				if (!(logTokens[i + offset].equals("spec") || logTokens[i + offset].matches("^\\d+$")))
+				if (!(logTokens[i + offset].equals("#spec#") || PreprocessMethod.isNumber(logTokens[i + offset])))
 				{
 					return false;
 				}
