@@ -27,6 +27,25 @@ public class Template extends AbstractTemplate
 		update();
 	}
 
+	public Template(Template other)
+	{
+		super(other.getContent());
+		matchLog = new ArrayList<String>();
+		logContentSize = other.getLogContentSize();
+		logContent = other.getLogContent();
+		update();
+	}
+
+	public HashMap<Integer, ArrayList<String>> getLogContent()
+	{
+		return logContent;
+	}
+
+	public int getLogContentSize()
+	{
+		return logContentSize;
+	}
+
 	public float getFreq()
 	{
 		return freq;
@@ -166,6 +185,7 @@ public class Template extends AbstractTemplate
 
 		while (messageToken[variableIndex[randomIndex]].equals("#spec#"))
 		{
+			randomIndex = (int) (Math.random() * variableIndex.length);
 			randomMessage = (int) (Math.random() * matchLog.size());
 			messageToken = matchLog.get(randomMessage).split(" ");
 		}

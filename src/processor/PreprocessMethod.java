@@ -17,7 +17,7 @@ public abstract class PreprocessMethod
 	private String[] lineArray;
 	private ArrayList<String> template;
 
-	private String outputFilePath = "./preprocess_file.txt";
+	private String outputFilePath = "./yarn_preprocess_file.txt";
 
 	public void transformFile(String filePath) throws Exception
 	{
@@ -29,8 +29,7 @@ public abstract class PreprocessMethod
 
 	private String readFile(String filePath) throws FileNotFoundException
 	{
-		File file = new File(filePath);
-		Scanner reader = new Scanner(file);
+		Scanner reader = new Scanner(new File(filePath));
 		String fileContent = reader.useDelimiter("\\Z").next();
 		reader.close();
 		return fileContent;
