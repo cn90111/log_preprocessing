@@ -18,6 +18,7 @@ public abstract class PreprocessMethod
 	private ArrayList<String> template;
 
 	private String outputFilePath = "./yarn_preprocess_file.txt";
+	private String outputTemplatePath = "./yarn_preprocess_template.txt";
 
 	public void transformFile(String filePath) throws Exception
 	{
@@ -51,23 +52,32 @@ public abstract class PreprocessMethod
 		FileReader reader = new FileReader(filePath);
 		BufferedReader buffer = new BufferedReader(reader);
 
-		FileWriter writer = new FileWriter(outputFilePath);
+		FileWriter fileWriter = new FileWriter(outputFilePath);
+		FileWriter templateWriter = new FileWriter(outputTemplatePath);
 
+		for(String template : template)
+		{
+			templateWriter.write(template);
+			templateWriter.write("\n");
+			templateWriter.flush();
+		}
+		templateWriter.close();
+		
 		String line;
 		while (buffer.ready())
 		{
 			line = buffer.readLine();
-			writer.write(transform(line));
+			fileWriter.write(transform(line));
 			if (buffer.ready())
 			{
-				writer.write("\n");
+				fileWriter.write("\n");
 			}
-			writer.flush();
+			fileWriter.flush();
 		}
-		writer.flush();
+		fileWriter.flush();
 		buffer.close();
 		reader.close();
-		writer.close();
+		fileWriter.close();
 	}
 
 	public ArrayList<String> getTemplate()
