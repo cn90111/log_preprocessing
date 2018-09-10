@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 
 import molfi.Template;
@@ -17,7 +18,7 @@ public abstract class PreprocessMethod
 	private String[] lineArray;
 	private ArrayList<String> template;
 
-	private String outputFilePath = "./yarn_preprocess_file.txt";
+	private String outputFilePath = "./yarn_preprocess_file2.txt";
 	private String outputTemplatePath = "./yarn_preprocess_template.txt";
 
 	public void transformFile(String filePath) throws Exception
@@ -25,6 +26,15 @@ public abstract class PreprocessMethod
 		fileContent = readFile(filePath);
 		lineArray = splitByline(fileContent);
 		template = getTemplate(lineArray);
+		writeTemplateFile();
+		writeFile(filePath);
+	}
+	
+	public void transformFile(String filePath, String templatePath) throws Exception
+	{
+		fileContent = readFile(filePath);
+		lineArray = splitByline(fileContent);
+		template = getTemplate(templatePath);
 		writeFile(filePath);
 	}
 
@@ -43,26 +53,41 @@ public abstract class PreprocessMethod
 		return lineArray;
 	}
 
+	protected abstract void setTemplate(String[] template);
+	
 	protected abstract ArrayList<String> getTemplate(String[] content);
+	
+	protected ArrayList<String> getTemplate(String path) throws FileNotFoundException
+	{
+		fileContent = readFile(path);
+		lineArray = splitByline(fileContent);
+		setTemplate(lineArray);
+		return new ArrayList<String>(Arrays.asList(lineArray));
+	}
 
 	protected abstract String transform(String line);
 
+	private void writeTemplateFile() throws IOException
+	{
+		FileWriter templateWriter = new FileWriter(outputTemplatePath);
+		
+		for(String line : template)
+		{
+			templateWriter.write(line);
+			templateWriter.write("\n");
+			templateWriter.flush();
+		}
+		templateWriter.flush();
+		templateWriter.close();	
+	}
+	
 	private void writeFile(String filePath) throws IOException
 	{
 		FileReader reader = new FileReader(filePath);
 		BufferedReader buffer = new BufferedReader(reader);
 
 		FileWriter fileWriter = new FileWriter(outputFilePath);
-		FileWriter templateWriter = new FileWriter(outputTemplatePath);
 
-		for(String template : template)
-		{
-			templateWriter.write(template);
-			templateWriter.write("\n");
-			templateWriter.flush();
-		}
-		templateWriter.close();
-		
 		String line;
 		while (buffer.ready())
 		{

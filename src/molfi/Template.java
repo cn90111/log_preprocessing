@@ -35,6 +35,12 @@ public class Template extends AbstractTemplate
 		logContent = other.getLogContent();
 		update();
 	}
+	
+	public Template(String template)
+	{
+		super(template);
+		tokens = content.split(" ");
+	}
 
 	public HashMap<Integer, ArrayList<String>> getLogContent()
 	{

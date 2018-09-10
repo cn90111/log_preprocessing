@@ -34,6 +34,29 @@ public class MoLFI extends PreprocessMethod
 	}
 
 	@Override
+	protected void setTemplate(String[] template)
+	{
+		solution = new Solution();
+		
+		ArrayList<Template> group;
+		int length; 
+		
+		for(String line : template)
+		{
+			length = line.split(" ").length;
+			
+			if(!solution.containsKey(length))
+			{
+				group = new ArrayList<Template>();
+				solution.put(length, group);
+			}
+			
+			group = solution.get(length);
+			group.add(new Template(line));
+		}
+	}
+
+	@Override
 	protected String transform(String line)
 	{
 		ArrayList<Template> group;
@@ -42,14 +65,18 @@ public class MoLFI extends PreprocessMethod
 		String[] tokens = splitLog(line);
 		groupLength = tokens.length;
 		group = solution.get(groupLength);
-
-		for (Template temp : group)
+		
+		if(group != null)
 		{
-			if (temp.compareTemplate(line))
+			for (Template temp : group)
 			{
-				return temp.getContent();
+				if (temp.compareTemplate(line))
+				{
+					return temp.getContent();
+				}
 			}
 		}
+		
 		return line;
 	}
 
